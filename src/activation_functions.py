@@ -1,5 +1,5 @@
 import numpy as np
-from module import Module
+from src.module import Module
 
 class TanH(Module):
     '''
@@ -14,6 +14,7 @@ class TanH(Module):
         pass
 
     def forward(self, X):
+        # print((np.tanh(X)).shape)
         return np.tanh(X) # or (np.exp(X)-np.exp(-X))/(np.exp(X)+np.exp(-X)) but the np function is faster so let's use that
     
     def update_parameters(self, learning_rate):
@@ -53,6 +54,7 @@ class Sigmoid(Module):
         pass
 
     def forward(self, X):
+        # print((1 / (1 + np.exp(-X))).shape)
         return 1 / (1 + np.exp(-X))
     
     def update_parameters(self, learning_rate):

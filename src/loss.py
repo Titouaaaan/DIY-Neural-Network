@@ -1,4 +1,4 @@
-from module import Loss
+from src.module import Loss
 import numpy as np
 
 class MSELoss(Loss):
@@ -18,7 +18,7 @@ class MSELoss(Loss):
         '''
         assert y.shape == yhat.shape, f'Mismatch of shapes: y->{y.shape} and yhat->{yhat.shape}'
 
-        return np.linalg.norm(y-yhat) ** 2
+        return np.mean((y-yhat) ** 2)
 
     def backward(self, y, yhat) -> np.array:
         '''

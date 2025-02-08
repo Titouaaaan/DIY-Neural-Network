@@ -1,4 +1,4 @@
-from module import Module
+from src.module import Module
 import numpy as np
 
 class Linear(Module):
@@ -26,6 +26,7 @@ class Linear(Module):
         '''
         assert X.shape[1] == self.weights.shape[0], f'Shape mismatch between X: {X.shape} and weights: {self.weights.shape}'
         assert self.bias.shape[0] == self.weights.shape[1], f'Shape mismatch between bias: {self.bias.shape} and weights: {self.weights.shape}'
+        # print((X @ self.weights + self.bias).shape)
         return X @ self.weights + self.bias
     
     def update_parameters(self, learning_rate: float) -> None:
