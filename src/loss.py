@@ -20,7 +20,7 @@ class MSELoss(Loss):
 
         return np.linalg.norm(y-yhat) ** 2
 
-    def backward(self, y, yhat):
+    def backward(self, y, yhat) -> np.array:
         '''
         Computes mean squared error gradient between targets and predictions. 
         Input: predictions (N, k) ndarray (N: no. of samples, k: no. of output nodes)
@@ -32,4 +32,4 @@ class MSELoss(Loss):
         ∂/∂yhati = (yi - yhati)**2 = 2(yi - yhati) * -1 = -2(yi - yhati)
         '''
         assert y.shape == yhat.shape, f'Mismatch of shapes: y->{y.shape} and yhat->{yhat.shape}'
-        return (-2 * (y - yhat)) 
+        return (-2 * (y - yhat)) / y.shape[0]

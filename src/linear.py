@@ -5,8 +5,8 @@ class Linear(Module):
     def __init__(self, input_dim: int, output_dim: int) -> None:
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.weights = np.random.randn(input_dim, output_dim)
-        self.bias = np.random.randn(output_dim)
+        self.weights = np.random.randn(input_dim, output_dim) 
+        self.bias = np.random.randn(output_dim) 
         self.weights_gradient = np.zeros_like(self.weights) # same shape as weight but zeros
         self.bias_gradient = np.zeros_like(self.bias) # same but for bias
     
@@ -59,8 +59,8 @@ class Linear(Module):
         assert input.shape[1] == self.input_dim 
         assert delta.shape[1] == self.output_dim
         assert input.shape[0] == delta.shape[0], f'Batch shape [0] mismatch between input: {input.shape} and delta: {delta.shape}'
-        self.weights_gradient += input.T @ delta
-        self.bias_gradient += delta.sum(axis=0)
+        self.weights_gradient = input.T @ delta
+        self.bias_gradient = delta.sum(axis=0)
 
     def backward_delta(self, input, delta):
         '''
