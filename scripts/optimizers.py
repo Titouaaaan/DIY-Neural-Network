@@ -109,20 +109,16 @@ def plot_loss(log_loss: list):
 input_dim = 2
 output_dim = 1
 learning_r = 0.1
-epoch = 4000
+epoch = 2000
 log_loss = []
+# From my tests we usually get an accuracy of 84 to 88% (depending on your parameter choice), 
+# So let's see if we can recreate those results
 
 # recreate the moon dataset but with different params this time!
 n_samples = 2000
 theta = np.linspace(0, np.pi, n_samples)
 X, y = create_moon_dataset(n_samples=n_samples, noise=0.2, theta=theta)
 X_train, y_train, X_test, y_test = train_test_split(X=X, y=y, split_ratio=0.8)
-
-# parameters
-input_dim = 2 # input of 2 because we have 2 coordinates for each point
-output_dim = 1 # 1 because we predict one class, 1 or 0
-learning_r = 0.1 # play around with that, but a value around 0.01 is pretty good
-num_epoch = 2000 # could even lower that a bit based on results but i gets executed very fast anyways
 
 # basic visualisation
 plot_train_test_split(X_train, y_train, X_test, y_test)
