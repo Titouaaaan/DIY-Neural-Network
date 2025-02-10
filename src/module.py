@@ -52,3 +52,9 @@ class Module(object):
         calculate the gradient of the cost in relation to the input of the deltas of the next layer
         '''
         raise NotImplementedError()
+    
+    def reset_parameters(self):
+        '''
+        reset the weights of the module
+        '''
+        raise NotImplementedError()

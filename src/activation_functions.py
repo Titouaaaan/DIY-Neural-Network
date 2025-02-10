@@ -15,6 +15,7 @@ class TanH(Module):
 
     def forward(self, X):
         # print((np.tanh(X)).shape)
+        self.last_input = X # keep track of the last input of the module
         return np.tanh(X) # or (np.exp(X)-np.exp(-X))/(np.exp(X)+np.exp(-X)) but the np function is faster so let's use that
     
     def update_parameters(self, learning_rate):
@@ -40,6 +41,9 @@ class TanH(Module):
         '''
         return delta * (1 - input**2)
     
+    def reset_parameters(self):
+        pass
+    
 class Sigmoid(Module):
     '''
     Also known as the logistic activation function
@@ -55,6 +59,7 @@ class Sigmoid(Module):
 
     def forward(self, X):
         # print((1 / (1 + np.exp(-X))).shape)
+        self.last_input = X # keep track of the last input of the module
         return 1 / (1 + np.exp(-X))
     
     def update_parameters(self, learning_rate):
@@ -76,3 +81,6 @@ class Sigmoid(Module):
         '''
         sig = 1/(1+np.exp(-input))
         return delta * (sig * (1 - sig))
+    
+    def reset_parameters(self):
+        pass

@@ -3,12 +3,14 @@ import numpy as np
 
 class Linear(Module):
     def __init__(self, input_dim: int, output_dim: int) -> None:
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.weights = np.random.randn(input_dim, output_dim) 
-        self.bias = np.random.randn(output_dim) 
+        self.input_dim = input_dim # how many inputs in our network
+        self.output_dim = output_dim # how many outputs (i.e. predictions)
+        self.weights = np.random.randn(input_dim, output_dim) * 0.1 # we add this factor to avoid having gradient that are to big and that explode 
+        self.bias = np.random.randn(output_dim) * 0.1 # same here
         self.weights_gradient = np.zeros_like(self.weights) # same shape as weight but zeros
         self.bias_gradient = np.zeros_like(self.bias) # same but for bias
+        self.weights_copy = np.copy(self.weights) # for safe keeping in case we want to reset our weights to the way they were before for testing
+        self.bias_copy = np.copy(self.bias) # same but for biases
     
     def zero_grad(self) -> None:
         '''
@@ -24,6 +26,7 @@ class Linear(Module):
         W: (input_size, output_size)
         b: (output_size, )
         '''
+        self.last_input = X # keep track of the last input of the layer
         assert X.shape[1] == self.weights.shape[0], f'Shape mismatch between X: {X.shape} and weights: {self.weights.shape}'
         assert self.bias.shape[0] == self.weights.shape[1], f'Shape mismatch between bias: {self.bias.shape} and weights: {self.weights.shape}'
         # print((X @ self.weights + self.bias).shape)
@@ -75,3 +78,12 @@ class Linear(Module):
         assert delta.shape[1] == self.output_dim
         assert self.weights.shape[1] == delta.shape[1], f'Output dim mismatch between weights: {input.shape} and delta: {delta.shape}'
         return delta @ self.weights.T
+    
+    def reset_parameters(self):
+        '''
+        reset the weights of the module
+        '''
+        self.weights = self.weights_copy
+        self.bias = self.bias_copy
+        self.weights_gradient = np.zeros_like(self.weights_gradient)
+        self.bias_gradient = np.zeros_like(self.bias_gradient)
