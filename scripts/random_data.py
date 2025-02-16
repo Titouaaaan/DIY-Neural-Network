@@ -9,6 +9,7 @@
 from src.linear import Linear
 from src.loss import MSELoss
 from src.activation_functions import TanH, Sigmoid
+from src.utils import create_moon_dataset, plot_data, train_test_split, plot_train_test_split, plot_loss
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -82,39 +83,10 @@ n_samples = 1000
 noise=0.2
 theta = np.linspace(0, np.pi, n_samples) # n samples of where 0 <= sample point <= π -> this creates dots in a semi circle !
 
-def create_moon_dataset(n_samples: int, noise: float, theta: np.array):
-    # Class 0: Upper moon
-    x0 = np.cos(theta) + np.random.normal(0, noise, n_samples) # take cosine of theta for x coordinates, and add noise for a nicer distribution
-    y0 = np.sin(theta) + np.random.normal(0, noise, n_samples) # same but take the sine for the y coordinates (+ noise)
-    labels0 = np.zeros(n_samples) # create n sample 'zero labels'
-
-    # Class 1: Lower moon (shifted and rotated)
-    x1 = 1 - np.cos(theta) + np.random.normal(0, noise, n_samples) # same logic as before but shifts to the right by 1 unit
-    y1 = -np.sin(theta) + 0.5 + np.random.normal(0, noise, n_samples) # taking -sin(theta) flips the moon, we add the 0.5 to shift it downward and add noise
-    labels1 = np.ones(n_samples) # create n sample 'one labels'
-
-    # Combine data
-    # for X, first n_samples belong to class 0, rest 1
-    X = np.vstack([np.column_stack((x0, y0)), np.column_stack((x1, y1))]) # create the dataset by combining the 0 and 1 class
-    y = np.concatenate([labels0, labels1])
-    
-    return X, y
-
 X, y = create_moon_dataset(n_samples=n_samples, noise=noise, theta=theta)
 
 print(f'y shape: {y.shape}, should just be a single row of 2 x n_samples elements!')
 print(f'X shape: {X.shape}, which should verify (2 x n_samples, 2), and n_samples={n_samples} :)')
-
-def plot_data(X: np.array, y: np.array, title: str, xlabel: str, ylabel: str):
-    plt.figure(figsize=(8, 6))
-    plt.scatter(X[y==0, 0], X[y==0, 1], c='blue', label='Class 0')
-    plt.scatter(X[y==1, 0], X[y==1, 1], c='red', label='Class 1')
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.legend()
-    plt.grid(True)
-    plt.show()
 
 plot_data(X, 
           y, 
@@ -127,56 +99,11 @@ plot_data(X,
 # Before the training loop, let's prepare the data by creating a train/test split (about 80%/20% split)
 split_ratio = 0.8
 
-def train_test_split(X: np.array, y: np.array, split_ratio: float):
-    indices = np.random.permutation(len(X)) # random permutation of indices from 0 to len(X)-1
-    # print(f'sample of the new order of indices: {indices[:10]}')
-
-    # shuffle X and y using the same permutation to avoid mixing their labels
-    # random permutation, but same for both arrays!
-    # ex: the index 0 is now randomly (for this example) at index 156 for both arrays
-    X_shuffled = X[indices]
-    y_shuffled = y[indices]
-
-    # we want 80% of train
-    # calculate the index of where the split should happen
-    # for example with n sample = 2000, 2000 * 0.8 = 1600
-    split_index = int(len(X_shuffled) * split_ratio) 
-
-    # Split the data
-    X_train, X_test = X_shuffled[:split_index], X_shuffled[split_index:] # splice the X_shuffled array into two new arrays, split at index 'split_index'
-    y_train, y_test = y_shuffled[:split_index], y_shuffled[split_index:] # same for y_shuffled
-
-    #add extra column for matrix sizes to be compatible with rest of the code, so (1600,) -> (1600,1)
-    y_train = y_shuffled[:split_index].reshape(-1, 1)  
-    y_test = y_shuffled[split_index:].reshape(-1, 1)
-
-    return X_train, y_train, X_test, y_test
-
 X_train, y_train, X_test, y_test = train_test_split(X=X, y=y, split_ratio=split_ratio)
 
 # Verify shapes
 print(f"Train features: {X_train.shape}, Train labels: {y_train.shape}")
 print(f"Test features: {X_test.shape}, Test labels: {y_test.shape}")
-
-def plot_train_test_split(X_train: np.array, y_train: np.array, X_test: np.array, y_test: np.array):
-    # Plot training and test data with reshaped labels
-    plt.figure(figsize=(12, 5))
-
-    # Training data (flatten y_train to 1D for indexing)
-    plt.subplot(1, 2, 1)
-    plt.scatter(X_train[y_train.ravel()==0, 0], X_train[y_train.ravel()==0, 1], c='blue', label='Class 0 (Train)')
-    plt.scatter(X_train[y_train.ravel()==1, 0], X_train[y_train.ravel()==1, 1], c='red', label='Class 1 (Train)')
-    plt.title("Training Data")
-    plt.legend()
-
-    # Test data (flatten y_test to 1D for indexing)
-    plt.subplot(1, 2, 2)
-    plt.scatter(X_test[y_test.ravel()==0, 0], X_test[y_test.ravel()==0, 1], c='blue', marker='o', alpha=0.6, label='Class 0 (Test)')
-    plt.scatter(X_test[y_test.ravel()==1, 0], X_test[y_test.ravel()==1, 1], c='red', marker='o', alpha=0.6, label='Class 1 (Test)')
-    plt.title("Test Data")
-
-    plt.tight_layout()
-    plt.show()
 
 plot_train_test_split(X_train, y_train, X_test, y_test)
 
@@ -256,16 +183,6 @@ for epoch in range(num_epoch):
 
     if epoch % 100 == 0:
         print(f'Epoch {epoch}: loss={loss}')
-
-# Plot the loss
-def plot_loss(log_loss: list):
-    plt.figure(figsize=(10, 6))
-    plt.plot(log_loss, label='loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('loss')
-    plt.title('loss over time')
-    plt.legend()
-    plt.show()
 
 plot_loss(log_loss=log_loss)
 
