@@ -1,16 +1,19 @@
 from .linear import Linear
-from .loss import MSELoss
+from .loss import MSELoss, CrossEntropy, BinaryCrossEntropy
 from .module import Module, Loss
-from .activation_functions import TanH, Sigmoid
+from .activation_functions import TanH, Sigmoid, Softmax
 from .encapsulation import Sequential, Optim
 
 __all__ = [
     "Linear",
     "MSELoss",
+    "CrossEntropy",
+    "BinaryCrossEntropy",
     "Module",
     "Loss",
     "TanH",
-    "Sigmoid"
-    "Sequential"
-    "Optim"
+    "Sigmoid",
+    "Softmax",
+    "Sequential",
+    "Optim",
 ]
