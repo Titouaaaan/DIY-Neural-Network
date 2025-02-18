@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import struct
 from array import array
+import random
 
 # dataset generation
 def create_moon_dataset(n_samples: int, noise: float, theta: np.array):
@@ -130,3 +131,24 @@ class MnistDataloader(object):
         x_train, y_train = self.read_images_labels(self.training_images_filepath, self.training_labels_filepath)
         x_test, y_test = self.read_images_labels(self.test_images_filepath, self.test_labels_filepath)
         return (x_train, y_train),(x_test, y_test)  
+
+def show_images(x_train, y_train, x_test, y_test, n_samples):
+    images_2_show = []
+    titles_2_show = []
+    for i in range(0, 10):
+        r = random.randint(1, 60000)
+        images_2_show.append(x_train[r])
+        titles_2_show.append('training image [' + str(r) + '] = ' + str(y_train[r]))    
+
+    for i in range(0, 5):
+        r = random.randint(1, 10000)
+        images_2_show.append(x_test[r])        
+        titles_2_show.append('test image [' + str(r) + '] = ' + str(y_test[r]))    
+
+    _ , axes = plt.subplots(1, n_samples, figsize=(15, 3))
+    for i in range(n_samples):
+        axes[i].imshow(x_train[i], cmap=plt.cm.gray)
+        axes[i].set_title(f"label {i+1}: {y_train[i]}")
+        axes[i].axis('off')  # Hide axes
+    plt.tight_layout()
+    plt.show()

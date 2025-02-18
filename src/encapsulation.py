@@ -51,10 +51,13 @@ class Optim:
 
         return loss
     
-    def SGD(self, data: tuple, batch_size: int, max_epoch: int, test_results: bool=True, verbose: bool=True):
+    def SGD(self, data: tuple, batch_size: int, max_epoch: int, test_results: bool=True, verbose: bool=True, multiclass: bool=False):
         X_train, y_train, X_test, y_test = data
         n_samples = X_train.shape[0] 
         log_loss = []
+
+        if verbose:
+            print(f'We divided our dataset of {n_samples} samples into {n_samples / batch_size} batches')
         
         for epoch in range(max_epoch):
             indices = np.random.permutation(n_samples) # generate a random array of indices
@@ -71,19 +74,24 @@ class Optim:
             for batch_X, batch_y in zip(X_batches, y_batches): # iterate through the mini batches
                 loss = self.step(batch_X, batch_y) # optim step
                 epoch_loss.append(loss) # save each loss from the mini batch
-            log_loss.append(np.mean(epoch_loss)) # save the average loss of all the mini batches as the epoch loss
-
-            # just display some basic info
+            avg_loss = np.mean(epoch_loss)
+            log_loss.append(avg_loss) # save the average loss of all the mini batches as the epoch loss
             if verbose:
-                print(f'We divided our dataset of {n_samples} samples into {n_samples / batch_size} batches')
-                print(f'Sizes of the various batches: {[minibatch.shape for minibatch in X_batches]}')
-                verbose=False
+                print(f'epoch {epoch}, loss:{np.mean(epoch_loss)}')
 
         # just test out the model on the test dataset
         if test_results:
-            predictions = np.where(self.network.forward(X_test) > 0.5, 1, 0)
-        accuracy = np.sum(predictions == y_test)
-        print(f'Accuracy of model: {accuracy/len(y_test)*100}%')
+            if not multiclass:
+                predictions = np.where(self.network.forward(X_test) > 0.5, 1, 0)
+                accuracy = np.sum(predictions == y_test)
+                print(f'Accuracy of model: {accuracy/len(y_test)*100}%')
+
+            else:
+                output = self.network.forward(X_test)
+                predictions = np.argmax(output, axis=1)
+                y_test_labels = np.argmax(y_test, axis=1)  # If y_test is one-hot
+                accuracy = np.mean(predictions == y_test_labels)
+                print(f'Accuracy of model: {accuracy * 100}%')
 
         # return the loss if we want to make graphs
         return log_loss

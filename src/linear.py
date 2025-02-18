@@ -63,7 +63,7 @@ class Linear(Module):
         assert input.shape[1] == self.input_dim 
         assert delta.shape[1] == self.output_dim
         assert input.shape[0] == delta.shape[0], f'Batch shape [0] mismatch between input: {input.shape} and delta: {delta.shape}'
-        self.weights_gradient = input.T @ delta
+        self.weights_gradient = input.T.dot(delta)
         self.bias_gradient = delta.sum(axis=0)
 
     def backward_delta(self, input, delta):
@@ -77,7 +77,7 @@ class Linear(Module):
         '''
         assert delta.shape[1] == self.output_dim
         assert self.weights.shape[1] == delta.shape[1], f'Output dim mismatch between weights: {input.shape} and delta: {delta.shape}'
-        return delta @ self.weights.T
+        return delta.dot(self.weights.T)
     
     def reset_parameters(self):
         '''
