@@ -53,7 +53,9 @@ class CrossEntropy(Loss):
         pi is the predicted probability for class i
         '''
         epsilon = 1e-12 # small constant to avoid having log(0) which is -inf which leads to nan
-        return -np.sum(y * np.log(yhat + epsilon)) / y.shape[0]
+        #yhat = np.clip(yhat, 1e-12, 1-1e-12)
+        yhat = np.clip(yhat, epsilon, 1 - epsilon)
+        return -np.sum(y * np.log(yhat)) / y.shape[0]
 
     def backward(self, y, yhat):
         '''
@@ -66,4 +68,5 @@ class CrossEntropy(Loss):
         ∂L / ∂zi = ∑ (∂L / ∂yhatj) * (∂pj / ∂zi)
         = pi - yi
         '''
+        #yhat = np.clip(yhat, 1e-12, 1 - 1e-12)
         return yhat - y

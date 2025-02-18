@@ -39,7 +39,7 @@ class TanH(Module):
         =1-[(e^z-e^(-z))/(e^z+e^(-z)]**2
         =1-a**2
         '''
-        return delta * (1 - input**2)
+        return (1 - np.square(np.tanh(input))) * delta
     
     def reset_parameters(self):
         pass
@@ -102,7 +102,9 @@ class Softmax(Module):
         '''
         Softmax Yhatk = exp(Xk) / j∑K exp(Xj)
         '''
-        return np.exp(X) / (np.sum(np.exp(X), axis=0))
+        self.last_input = X
+        exps = np.exp(X - np.max(X, axis=1, keepdims=True))
+        return exps / np.sum(exps, axis=1, keepdims=True)
     
     def update_parameters(self, learning_rate):
         ''' no parameters to update '''
@@ -126,7 +128,7 @@ class Softmax(Module):
         So we don't need this unless the loss isn't cross entropy
         '''
         # return delta * (input * (1 - input))
-        pass
+        return delta
     
     def reset_parameters(self):
         pass
