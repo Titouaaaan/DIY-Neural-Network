@@ -68,5 +68,36 @@ class CrossEntropy(Loss):
         ∂L / ∂zi = ∑ (∂L / ∂yhatj) * (∂pj / ∂zi)
         = pi - yi
         '''
-        #yhat = np.clip(yhat, 1e-12, 1 - 1e-12)
+        epsilon = 1e-12
+        yhat = np.clip(yhat, epsilon, 1 - epsilon)
         return yhat - y
+    
+class BinaryCrossEntropy(Loss):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, y, yhat):
+        '''
+        BCE(y, yhat) = -(y * log(yhat) + (1 - y)log(1 - yhat))
+        '''
+        epsilon = 1e-12 # small constant to avoid having log(0) which is -inf which leads to nan
+        yhat = np.clip(yhat, epsilon, 1 - epsilon)
+        return - np.mean(y * np.log(yhat) + (1 - y) * np.log(1 - yhat)) # we do np.mean to get the avg of losses of the batch
+    
+    def backward(self, y, yhat):
+        '''
+        ∂L/ ∂yhat , term by term:
+        ∂yhat of (- y * log(yhat)) = -y*1/yhat = -y/yhat 
+        ∂yhat of (-(1-y)*log(1-yhat)) = -(1-y) * (-1/1-yhat) = (1-y)/(1-yhat)
+        so 
+        ∂L/∂yhat = -y/yhat + (1-y)/(1-yhat)
+                 = -(y(1-yhat)/yhat(1-yhat)) + yhat(1-y)/yhat(1-yhat)
+                 = (-y+yyhat+yhat-yyhat) / yhat(1-yhat) 
+                 = (yhat - y) / yhat * (1-yhat)
+        and since the BCE is averaged over the batch, we technically have 
+        1/N * ∑ (yhat - y) / yhat * (1-yhat) 
+        so we divide by N, i.e multiply the denominator by N=yhat.shape[0] the batch size
+        '''
+        epsilon = 1e-12 
+        yhat = np.clip(yhat, epsilon, 1 - epsilon)
+        return (yhat - y) / (yhat * (1 - yhat) * yhat.shape[0])
