@@ -84,3 +84,49 @@ class Sigmoid(Module):
     
     def reset_parameters(self):
         pass
+
+class Softmax(Module):
+    '''
+    Computes the exponential of every score and 
+    normalizes them (divide by the sum of the exponentials)
+    Predicts the class with the highest probability
+    '''
+    def __init__(self):
+        super().__init__()
+    
+    def zero_grad(self):
+        ''' no gradient to reset to zero '''
+        pass
+
+    def forward(self, X):
+        '''
+        Softmax Yhatk = exp(Xk) / j∑K exp(Xj)
+        '''
+        return np.exp(X) / (np.sum(np.exp(X), axis=0))
+    
+    def update_parameters(self, learning_rate):
+        ''' no parameters to update '''
+        pass
+
+    def backward_update_gradient(self, input, delta):
+        ''' no gradient to update '''
+        pass
+
+    def backward_delta(self, input, delta):
+        '''
+        Derivative of softmax:
+        ∂S = ∂Si / ∂aj
+        = (exp(ai) * ∑ - exp(aj)exp(ai)) / ∑exp(ak)**2
+        = (exp(ai)/∑exp(ak)**2) * (∑ - exp(aj) / ∑exp(ak)**2)
+        = Si * ( 1 - Sj )
+        So if the loss function is cross entropy we don't actually need this!
+        Why?
+        Because the backprop step of the cross entropy actually takes into account the
+        softmax gradient 
+        So we don't need this unless the loss isn't cross entropy
+        '''
+        # return delta * (input * (1 - input))
+        pass
+    
+    def reset_parameters(self):
+        pass
