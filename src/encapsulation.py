@@ -1,41 +1,78 @@
-from src.module import Module
-from src.linear import Linear
-from src.activation_functions import TanH, Sigmoid
+from src.module import Module, Loss
 import numpy as np
 
 class Sequential:
+    '''
+    This class will essentially be the network, which contains 
+    a sequences of various modules one after the other, 
+    like linear layers and activation functions
+
+    Example use case:
+    network = Sequential(
+        Linear(input_dim, 128),   # First hidden layer with 128 units
+        TanH(),                   # Activation function
+        Linear(128, output_dim),   # Output layer 
+        Softmax()                 # Softmax for output probabilities
+    )
+    '''
     def __init__(self, *args: Module) -> None:
         self.modules = [*args] # store all our modules in a list
 
     def forward(self, input):
-
+        '''
+        Call the forward function of each module (basic forward pass)
+        '''
         for module in self.modules: # iterate through all modules of the network
             input = module.forward(input) # output of a modules forward pass becomes the next one's input
 
         return input # this will be the final output of the forward pass
 
     def backward(self, gradient):
-        
+        ''' 
+        Same as above but for backpropagation :)
+        '''
         for module in reversed(self.modules):
             module.backward_update_gradient(module.last_input, gradient)
             gradient = module.backward_delta(module.last_input, gradient)
         return gradient 
     
-    def update_parameters(self, eps):
+    def update_parameters(self, eps: float):
+        '''
+        Again we just call the module's function
+        But some modules dont update parameters, like activation functions
+        So we have to make sure that their call doesn't break
+        -> have pass in the update_parameters fun of the activation function
+        '''
         for module in self.modules:
             module.update_parameters(learning_rate=eps)
         
     def zero_grad(self):
+        '''
+        call zero grad where possible,
+        same logic as for the function above
+        '''
         for module in self.modules:
             module.zero_grad()
 
 class Optim:
-    def __init__(self, network: Sequential, loss, eps):
+    '''
+    Optimizer class for training a neural network using stochastic gradient descent (SGD
+    '''
+    def __init__(self, network: Sequential, loss: Loss, eps: float):
+        '''
+        Initialize the optimizer with a:
+        - network: model to train
+        - loss: loss function 
+        - eps: learning rate for updating the network parameters
+        '''
         self.network = network
         self.loss = loss
         self.eps = eps 
 
     def step(self, batch_x, batch_y):
+        '''
+        Perform a single optimization step (forward pass, loss computation, backward pass, and parameter update).
+        '''
         # feed forward
         output = self.network.forward(batch_x)
 
@@ -52,6 +89,22 @@ class Optim:
         return loss
     
     def SGD(self, data: tuple, batch_size: int, max_epoch: int, test_results: bool=True, verbose: bool=True, multiclass: bool=False):
+        '''
+        Train the neural network using stochastic gradient descent (SGD).
+
+        Parameters:
+        - data: tuple containing training and test datasets (X_train, y_train, X_test, y_test)
+        - batch_size: trivial
+        - max_epoch: max training steps
+        - test_results: whether to test the model on the test dataset after training
+        - verbose: for printing statements
+        - multiclass: multiclass classification problem or not?
+
+        Returns:
+        - log_loss: A list of average losses for each epoch.
+
+        The test results at the bottom is subject to change but the rest should work consistently
+        '''
         X_train, y_train, X_test, y_test = data
         n_samples = X_train.shape[0] 
         log_loss = []
@@ -95,4 +148,3 @@ class Optim:
 
         # return the loss if we want to make graphs
         return log_loss
-

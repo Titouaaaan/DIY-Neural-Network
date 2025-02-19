@@ -37,10 +37,16 @@ class Autoencoder():
         self.decoder.update_parameters(self.learning_r)
 
     def train_auto_encoder(self, data: tuple, batch_size: int, max_epoch: int, show_results:bool=True):
+        '''
+        SGD training loop for the encoder/decoder
+        Parameters are trivial if you went through encapsulation.py :)
+        '''
         X_train, X_test = data
         n_samples = X_train.shape[0] 
         log_loss = []
         
+        # here we actually do a SGD, and refactored the code from encapsulation.py,
+        # from the SGD function (we just adapted it for images so no need for labels)
         for epoch in range(max_epoch):
             indices = np.random.permutation(n_samples) # generate a random array of indices
 

@@ -4,6 +4,10 @@ import numpy as np
 class MSELoss(Loss):
     '''
     MSE(y, yhat) = 1/n * ∑(y-yhat) ** 2
+    The term (y-yhat) ** 2 calculates the squared difference 
+    between the actual value and the predicted value for each example.
+    Squaring the difference ensures that the loss is always non-negative and
+    gives more weight to larger errors, making the model more sensitive to outliers.
     '''
     def __init__(self):
         super().__init__()
@@ -51,6 +55,10 @@ class CrossEntropy(Loss):
         ∑ sum of i over C, where C is the number of classes
         yi is 1 for correct class i, 0 for rest (one hot encoding)
         pi is the predicted probability for class i
+
+        The term (yi * log(pi) is active only for the true class (where yi = 1).
+        It measures how well the model predicts the probability of the true class.
+        The log function ensures that the loss is large when the predicted probability pi is small (i.e., the model is confidently wrong).
         '''
         epsilon = 1e-12 # small constant to avoid having log(0) which is -inf which leads to nan
         #yhat = np.clip(yhat, 1e-12, 1-1e-12)
@@ -78,6 +86,12 @@ class BinaryCrossEntropy(Loss):
 
     def forward(self, y, yhat):
         '''
+        True Positive (y = 1): When the true label is 1, the loss simplifies to -log(p). 
+        This means the loss decreases as the predicted probability p approaches 1.
+
+        True Negative (y = 0): When the true label is 0, the loss simplifies to -log(1-p). 
+        This means the loss decreases as the predicted probability p approaches 0.
+
         BCE(y, yhat) = -(y * log(yhat) + (1 - y)log(1 - yhat))
         '''
         epsilon = 1e-12 # small constant to avoid having log(0) which is -inf which leads to nan
