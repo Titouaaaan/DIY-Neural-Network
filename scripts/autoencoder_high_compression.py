@@ -4,15 +4,13 @@
 # ===================================================================
 
 from os.path  import join
-from collections import Counter
-import matplotlib.pyplot as plt
 import numpy as np
 from src.linear import Linear
 from src.auto_encoder import Autoencoder
 from src.loss import BinaryCrossEntropy
 from src.activation_functions import TanH, Sigmoid
 from src.encapsulation import Sequential
-from src.utils import MnistDataloader, plot_loss, one_hot_encode
+from src.utils import MnistDataloader, plot_loss, show_images_side_by_side
 from src.pca import PCA
 from src.k_means import KMeans  
 
@@ -76,45 +74,6 @@ losses = auto_encoder.train_auto_encoder(data=(x_train, x_test),
                                          show_results=False) # avoid showing results here we'll do it after
 
 plot_loss(log_loss=losses)
-
-def show_images_side_by_side(original_images, reconstructed_images, title, num_images=10, columns=5):
-    """
-    Display a grid of original and reconstructed images side by side.
-
-    Parameters:
-    - original_images: numpy array of original images, shape (num_images, height, width) or (num_images, height*width)
-    - reconstructed_images: numpy array of reconstructed images, same shape as original_images
-    - title: Title of the plot
-    - num_images: Number of images to display
-    - columns: Number of columns in the grid
-    """
-    # If images are flattened, reshape them to 2D
-    if original_images.ndim == 2:
-        image_dim = int(np.sqrt(original_images.shape[1]))
-        original_images = original_images.reshape(-1, image_dim, image_dim)
-        reconstructed_images = reconstructed_images.reshape(-1, image_dim, image_dim)
-
-    num_images = min(num_images, len(original_images))
-    rows = (num_images + columns - 1) // columns
-
-    plt.figure(figsize=(columns * 4, rows * 2))
-    for i in range(num_images):
-        # Plot original image
-        plt.subplot(rows, columns * 2, 2 * i + 1)
-        plt.imshow(original_images[i], cmap='gray')
-        plt.axis('off')
-        if i == 0:
-            plt.title('Original')
-
-        # Plot reconstructed image
-        plt.subplot(rows, columns * 2, 2 * i + 2)
-        plt.imshow(reconstructed_images[i], cmap='gray')
-        plt.axis('off')
-        if i == 0:
-            plt.title('Reconstructed')
-
-    plt.suptitle(title)
-    plt.show()
 
 # Example usage
 # Assuming x_test and reconstructed_images are your image arrays
