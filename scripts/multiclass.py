@@ -3,7 +3,6 @@
 # python -m scripts.multiclass
 # ===================================================================
 
-import random
 from os.path  import join
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,7 +10,7 @@ from src.linear import Linear
 from src.loss import MSELoss, CrossEntropy
 from src.activation_functions import TanH, Sigmoid, Softmax
 from src.encapsulation import Sequential, Optim
-from src.utils import MnistDataloader, show_images, plot_loss
+from src.utils import MnistDataloader, show_images, plot_loss, one_hot_encode
 
 # ===================================================================
 # LOADING THE DATASET
@@ -78,14 +77,6 @@ print('\nConverting the labels into arrays')
 print(f"y_train shape: {y_train.shape}")
 print(f"y_test shape: {y_test.shape}")
 print(f'First 5 label: {y_train[:5]}')
-
-# function to one hot encode the labels
-def one_hot_encode(y, num_classes=10):
-    # Create a zero matrix of shape (num_samples, num_classes)
-    one_hot = np.zeros((y.shape[0], num_classes))
-    # Set the correct class as 1 for each sample
-    one_hot[np.arange(y.shape[0]), y] = 1
-    return one_hot
 
 y_train = one_hot_encode(y_train)
 y_test = one_hot_encode(y_test)

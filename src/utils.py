@@ -152,3 +152,11 @@ def show_images(x_train, y_train, x_test, y_test, n_samples):
         axes[i].axis('off')  # Hide axes
     plt.tight_layout()
     plt.show()
+
+# function to one hot encode the labels
+def one_hot_encode(y, num_classes=10):
+    # Create a zero matrix of shape (num_samples, num_classes)
+    one_hot = np.zeros((y.shape[0], num_classes))
+    # Set the correct class as 1 for each sample
+    one_hot[np.arange(y.shape[0]), y] = 1
+    return one_hot
