@@ -1,6 +1,8 @@
 # ===================================================================
 # USE THIS TO RUN THE SCRIPTS!
 # python -m scripts.autoencoder_high_compression
+# 
+# THIS SCRIPTS IS NOT FINISHED
 # ===================================================================
 
 from os.path  import join
@@ -11,7 +13,7 @@ from src.loss import BinaryCrossEntropy
 from src.activation_functions import TanH, Sigmoid
 from src.encapsulation import Sequential
 from src.utils import MnistDataloader, plot_loss, show_images_side_by_side
-from src.pca import PCA
+from src.dim_reduction import TSNE, PCA
 from src.k_means import KMeans  
 
 input_path = 'data/MNIST'
@@ -40,9 +42,9 @@ def reshape_data(x_train, x_test):
 
 x_train, x_test = reshape_data(x_train=x_train,x_test=x_test)
 input_dim = x_train.shape[1] # 784 because 28*28
-output_dim = 10
+output_dim = 16 # play around with this parameter to observe better results
 learning_rate = 0.01
-max_epoch = 3 # we will increase this later
+max_epoch = 80
 n_samples = 256
 
 encoder = Sequential(
@@ -86,10 +88,15 @@ show_images_side_by_side(x_test[:10], reconstructed_images, title='Original vs R
 reconstructed_images = auto_encoder.forward(x_test)
 y_test = np.array(y_test)
 
+# How to know if we should use T-SNE or PCA?
+# https://www.geeksforgeeks.org/difference-between-pca-vs-t-sne/
+
 # Apply PCA to reduce to 2D
-pca = PCA(n_components=2)
-reduced_data = pca.fit_transform(reconstructed_images)
+# pca = PCA(n_components=2)
+# reduced_data = pca.fit_transform(reconstructed_images)
+tsne = TSNE(n_components=2, perplexity=30, learning_rate=50, n_iter=800)
+reduced_data = tsne.fit_transform(reconstructed_images)
 
 # Perform K-means clustering on the 2D data
-kmeans = KMeans(k=10, points=reduced_data)  # Assuming 10 clusters for MNIST
-cluster_labels = kmeans.run_clustering(y_test)
+kmeans = KMeans(k=10, points=reduced_data[:750])  # only apply tsne on less samples instead of 10k otherwise it takes too long
+cluster_labels = kmeans.run_clustering(y_test[:750])
