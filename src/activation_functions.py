@@ -166,3 +166,11 @@ class ReLU(Module):
     def backward_delta(self, input, delta):
         relu_grad = input > 0
         return delta * relu_grad
+    
+    def update_parameters(self, learning_rate):
+        ''' no parameters to update '''
+        pass
+
+    def backward_update_gradient(self, input, delta):
+        ''' no gradient to update '''
+        pass

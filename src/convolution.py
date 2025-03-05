@@ -48,7 +48,7 @@ class Convolution1D(Module):
             :].reshape((batch_size, self.out_length, -1)))
 
         # Perform the convolution operation
-        Z = self.input_col @ self.weights.reshape(self.chan_out, -1).T
+        Z = np.dot(self.input_col,self.weights.reshape(self.chan_out, -1).T)
 
         # Add the bias term
         Z += self.bias.T
@@ -71,9 +71,11 @@ class Convolution1D(Module):
 
         # Update the weight gradient
         self.gradient_weights += (
-            delta.transpose(2, 0, 1).reshape(self.chan_out, -1) @  # Reshape delta for matrix multiplication
-            self.input_col.reshape(-1, self.k_size * self.chan_in)  # Reshape input_col for matrix multiplication
-        ).reshape(self.weights.shape) / batch_size  # Reshape to match weights and divide by batch size
+            np.dot(
+                delta.transpose(2, 0, 1).reshape(self.chan_out, -1),  # Reshape delta for matrix multiplication
+                self.input_col.reshape(-1, self.k_size * self.chan_in)  # Reshape input_col for matrix multiplication
+                )
+                ).reshape(self.weights.shape) / batch_size  # Reshape to match weights and divide by batch size
 
     def backward_delta(self, input, delta):
         '''
@@ -86,7 +88,7 @@ class Convolution1D(Module):
         batch_size = delta.shape[0]
 
         # Perform matrix multiplication and reshape the result
-        tmp = ( (delta @ self.weights.reshape(self.chan_out, -1)) / batch_size
+        tmp = ( (np.dot(delta,self.weights.reshape(self.chan_out, -1))) / batch_size
             ).reshape(batch_size, self.out_length, self.k_size, self.chan_in)
 
         # Create a zero matrix dX with the same shape as the input
@@ -98,6 +100,10 @@ class Convolution1D(Module):
         return deltaX
 
     def update_parameters(self, learning_rate):
+        max_gradient = 1.0
+        np.clip(self.gradient_weights, -max_gradient, max_gradient, out=self.gradient_weights)
+        np.clip(self.gradient_bias, -max_gradient, max_gradient, out=self.gradient_bias)
+
         self.weights -= learning_rate * self.gradient_weights
         self.bias -= learning_rate * self.gradient_bias
 
@@ -107,46 +113,53 @@ class MaxPool1D(Module):
         self.k_size = k_size
         self.stride = stride
 
-    def forward(self, X):
-        batch_size, length, chan_in = X.shape
-        out_length = (length - self.k_size) // self.stride + 1
-
-        X_view = np.lib.stride_tricks.sliding_window_view(X, (1, self.k_size, 1))[::1, :: self.stride, ::1]
-        X_view = X_view.reshape(batch_size, out_length, chan_in, self.k_size)
-
-        self.output = np.max(X_view, axis=-1)
-        return self.output
-
+    def forward(self, input):
+        self.last_input = input
+        batch_size, length, chan_in = input.shape
+        self.out_length = (length - self.k_size) // self.stride + 1
+        
+        input_col = (input[:, 
+            (self.stride * np.arange(self.out_length))[:, np.newaxis] + np.arange(self.k_size)[np.newaxis, :], 
+            :].reshape((batch_size, self.out_length, self.k_size, chan_in)))
+        
+        self.amax = 1. * (input_col == np.amax(input_col, axis=2, keepdims=True))
+        Z = input_col.max(axis=2)
+        return Z
+ 
     def backward_delta(self, input, delta):
         batch_size, length, chan_in = input.shape
-        out_length = (length - self.k_size) // self.stride + 1
+        tmp = (
+            np.tile(delta, 2) * 
+            self.amax.reshape(batch_size, self.out_length, -1)
+        ).reshape(batch_size, self.out_length, self.k_size, chan_in) / batch_size
+        dX = np.zeros_like(input,dtype = np.float64)
+        dX[:, self.stride * np.arange(self.out_length)[:, np.newaxis] + np.arange(self.k_size)[np.newaxis, :]] += tmp[:, np.arange(self.out_length)]
+    
+        return dX
 
-        input_view = np.lib.stride_tricks.sliding_window_view(input, (1, self.k_size, 1))[
-            ::1, :: self.stride, ::1
-        ]
-        input_view = input_view.reshape(batch_size, out_length, chan_in, self.k_size)
+    def zero_grad(self):
+        pass  
 
-        max_indices = np.argmax(input_view, axis=-1)
+    def backward_update_gradient(self, input, delta):
+        pass  
 
-        # Create indices for batch and channel dimensions
-        batch_indices, out_indices, chan_indices = np.meshgrid(
-            np.arange(batch_size),
-            np.arange(out_length),
-            np.arange(chan_in),
-            indexing="ij",
-        )
-
-        # Update d_out using advanced indexing
-        self.d_out = np.zeros_like(input)
-        self.d_out[
-            batch_indices, out_indices * self.stride + max_indices, chan_indices
-        ] += delta[batch_indices, max_indices, chan_indices]
-
-        return self.d_out
+    def update_parameters(self, learning_rate):
+        pass  
 
 class Flatten(Module):
-    def forward(self, X):
-        return X.reshape(X.shape[0], -1)
-
+    def forward(self, input):
+        self.last_input = input
+        batch_size = input.shape[0]
+        return input.reshape(batch_size, -1)
+    
     def backward_delta(self, input, delta):
-        return delta.reshape(input.shape)
+        return delta.reshape(input.shape) * input
+
+    def zero_grad(self):
+        pass
+
+    def backward_update_gradient(self, input, delta):
+        pass
+
+    def update_parameters(self, learning_rate):
+        pass
