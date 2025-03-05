@@ -157,3 +157,12 @@ class Softmax(Module):
     
     def reset_parameters(self):
         pass
+
+class ReLU(Module):
+    def forward(self, input):
+        self.last_input = input
+        return np.maximum(0, input)
+    
+    def backward_delta(self, input, delta):
+        relu_grad = input > 0
+        return delta * relu_grad
