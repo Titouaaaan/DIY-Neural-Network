@@ -115,3 +115,34 @@ class BinaryCrossEntropy(Loss):
         epsilon = 1e-12 
         yhat = np.clip(yhat, epsilon, 1 - epsilon)
         return (yhat - y) / (yhat * (1 - yhat) * yhat.shape[0])
+
+class CategoricalCrossEntropy(Loss):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, y, yhat):
+        '''
+        Categorical Cross-Entropy (CCE) is used for multi-class classification problems.
+        It measures the difference between the true label y and the prediction yhat (both distributions)
+
+        For each class, the loss is calculated as -log(p_true_class), where p_true_class is the predicted probability of the true class
+        This means the loss decreases as the predicted probability of the true class approaches 1
+
+        CCE(y, yhat) = -∑(y * log(yhat)) / N
+        where N is the number of samples in the batch.
+        '''
+        epsilon = 1e-12  # small constant to avoid having log(0) which is -inf which leads to nan
+        yhat = np.clip(yhat, epsilon, 1 - epsilon)
+        return -np.sum(y * np.log(yhat)) / yhat.shape[0]  # we do np.sum to get the total loss of the batch and divide by N to get the average
+
+    def backward(self, y, yhat):
+        '''
+        ∂L/∂yhat, term by term:
+        ∂yhat of (- y * log(yhat)) = -y * 1/yhat = -y/yhat
+        Since Categorical Cross-Entropy is the sum over all classes, the gradient is simply the difference between the predicted probabilities and the true labels
+        So,
+        ∂L/∂yhat = yhat - y
+        '''
+        epsilon = 1e-12
+        yhat = np.clip(yhat, epsilon, 1 - epsilon)
+        return (yhat - y)  # the gradient is simply the difference between the predicted probabilities and the true labels
