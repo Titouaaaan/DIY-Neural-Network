@@ -27,14 +27,11 @@ class Convolution1D(Module):
     
     def forward(self, input):
         '''
-        - We first extract the dimensions of the input.
-        - We calculate the output length based on the kernel size and stride.
-        - We then create a matrix `input_col` that represents the flattened input patches.
-        - We perform the convolution operation by multiplying `input_col` with the reshaped weights.
-        - We add the bias term and reshape the output to the desired dimensions.
+        create `input_col`, the flattened input patches.
+        perform the convolution operation by multiplying `input_col` with the reshaped weights.
+        add the bias term and reshape the output
         '''
-        batch_size, length, chan_in = input.shape
-        assert chan_in == self.chan_in, "Input channel mismatch."
+        batch_size, length, _ = input.shape
 
         # Store the input for use in the backward pass
         self.last_input = input
@@ -48,21 +45,17 @@ class Convolution1D(Module):
             :].reshape((batch_size, self.out_length, -1)))
 
         # Perform the convolution operation
-        Z = np.dot(self.input_col,self.weights.reshape(self.chan_out, -1).T)
-
-        # Add the bias term
-        Z += self.bias.T
+        Z = np.dot(self.input_col,self.weights.reshape(self.chan_out, -1).T) + self.bias.T
 
         # Reshape the output to the desired dimensions
-        Z = Z.reshape(batch_size, self.out_length, self.chan_out)
-        return Z
+        return Z.reshape(batch_size, self.out_length, self.chan_out)
+        
 
     def backward_update_gradient(self, input, delta):
         '''
-        - We first extract the batch size from the delta.
-        - We update the bias gradient by taking the mean of delta across the batch and spatial dimensions.
-        - We update the weight gradient by multiplying the reshaped delta with the reshaped input_col matrix.
-        - We reshape the result to match the dimensions of the weights and divide by the batch size.
+        update the bias gradient by taking the mean of delta across the batch and spatial dimensions.
+        update the weight gradient by multiplying the reshaped delta with the reshaped input_col matrix.
+        reshape the result to match the dimensions of the weights and divide by the batch size.
         '''
         batch_size = delta.shape[0]
 
@@ -79,25 +72,23 @@ class Convolution1D(Module):
 
     def backward_delta(self, input, delta):
         '''
-        - We first extract the batch size from the delta.
-        - We perform a matrix multiplication between delta and the reshaped weights.
-        - We reshape the result to match the dimensions of the input patches.
-        - We create a zero matrix delta X with the same shape as the input.
-        - We accumulate the gradients in delta X using advanced indexing.
+        perform a matrix multiplication between delta and the reshaped weights.
+        reshape the result to match the dimensions of the input patches.
+        accumulate the gradients
         '''
         batch_size = delta.shape[0]
 
         # Perform matrix multiplication and reshape the result
-        tmp = ( (np.dot(delta,self.weights.reshape(self.chan_out, -1))) / batch_size
+        grad = ( (np.dot(delta,self.weights.reshape(self.chan_out, -1))) / batch_size
             ).reshape(batch_size, self.out_length, self.k_size, self.chan_in)
 
         # Create a zero matrix dX with the same shape as the input
-        deltaX = np.zeros_like(input, dtype=float)
+        delta = np.zeros_like(input, dtype=float)
 
-        # Accumulate the gradients in deltaX using advanced indexing
-        deltaX[:, self.stride * np.arange(self.out_length)[:, np.newaxis] + np.arange(self.k_size)[np.newaxis, :]] += tmp[:, np.arange(self.out_length)]
+        # Accumulate the gradients in delta using advanced indexing
+        delta[:, self.stride * np.arange(self.out_length)[:, np.newaxis] + np.arange(self.k_size)[np.newaxis, :]] += grad[:, np.arange(self.out_length)]
 
-        return deltaX
+        return delta
 
     def update_parameters(self, learning_rate):
         max_gradient = 1.0
@@ -110,32 +101,46 @@ class Convolution1D(Module):
 
 class MaxPool1D(Module):
     def __init__(self, k_size, stride):
+        '''
+        - k_size: Size of the pooling window.
+        - stride: Stride of the pooling operation.
+        '''
         self.k_size = k_size
         self.stride = stride
 
     def forward(self, input):
+        '''
+        - Compute the output length based on the input length, kernel size, and stride.
+        - Reshape the input to extract patches for pooling.
+        - Compute the argmax indices for the backward pass.
+        '''
         self.last_input = input
         batch_size, length, chan_in = input.shape
         self.out_length = (length - self.k_size) // self.stride + 1
         
-        input_col = (input[:, 
+        # Reshape the input to extract patches for pooling
+        reshaped_input = (input[:, 
             (self.stride * np.arange(self.out_length))[:, np.newaxis] + np.arange(self.k_size)[np.newaxis, :], 
             :].reshape((batch_size, self.out_length, self.k_size, chan_in)))
-        
-        self.amax = 1. * (input_col == np.amax(input_col, axis=2, keepdims=True))
-        Z = input_col.max(axis=2)
+        # Compute the argmax indices for the backward pass
+        self.amax = 1. * (reshaped_input == np.amax(reshaped_input, axis=2, keepdims=True))
+        Z = reshaped_input.max(axis=2) # max pool
         return Z
  
     def backward_delta(self, input, delta):
-        batch_size, length, chan_in = input.shape
-        tmp = (
+        '''
+        gradient of the loss with respect to the input
+        use the argmax indices to propagate the gradient back to the input.
+        '''
+        batch_size, _, chan_in = input.shape
+        grad = (
             np.tile(delta, 2) * 
             self.amax.reshape(batch_size, self.out_length, -1)
         ).reshape(batch_size, self.out_length, self.k_size, chan_in) / batch_size
-        dX = np.zeros_like(input,dtype = np.float64)
-        dX[:, self.stride * np.arange(self.out_length)[:, np.newaxis] + np.arange(self.k_size)[np.newaxis, :]] += tmp[:, np.arange(self.out_length)]
+        deltax = np.zeros_like(input,dtype = np.float64)
+        deltax[:, self.stride * np.arange(self.out_length)[:, np.newaxis] + np.arange(self.k_size)[np.newaxis, :]] += grad[:, np.arange(self.out_length)]
     
-        return dX
+        return deltax
 
     def zero_grad(self):
         pass  
@@ -148,11 +153,17 @@ class MaxPool1D(Module):
 
 class Flatten(Module):
     def forward(self, input):
+        '''
+        Reshape the input to flatten all dimensions except the batch size.
+        '''
         self.last_input = input
         batch_size = input.shape[0]
         return input.reshape(batch_size, -1)
     
     def backward_delta(self, input, delta):
+        '''
+        just reshape the gradient to match the original input shape
+        '''
         return delta.reshape(input.shape) * input
 
     def zero_grad(self):
