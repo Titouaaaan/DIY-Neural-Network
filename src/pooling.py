@@ -54,40 +54,28 @@ class MaxPool1D(Module):
     def update_parameters(self, learning_rate):
         pass  
 
+''' 
+I think this doesnt work, so I need to fix it so don't use it atm
+As long as this comment is here then its broken ¯\(ツ)/¯
+'''
 class AveragePool1D(Module):
     def __init__(self, k_size, stride):
-        '''
-        - k_size: Size of the pooling window.
-        - stride: Stride of the pooling operation.
-        '''
-        super().__init__()
         self.k_size = k_size
         self.stride = stride
 
     def forward(self, input):
-        '''
-        - Compute the output length based on the input length, kernel size, and stride.
-        - Reshape the input to extract patches for pooling.
-        - Compute the mean of the patches.
-        '''
         self.last_input = input
         batch_size, length, chan_in = input.shape
         self.out_length = (length - self.k_size) // self.stride + 1
 
-        # Reshape the input to extract patches for pooling
         reshaped_input = (input[:,
             (self.stride * np.arange(self.out_length))[:, np.newaxis] + np.arange(self.k_size)[np.newaxis, :],
             :].reshape((batch_size, self.out_length, self.k_size, chan_in)))
 
-        # Compute the mean of the patches
         Z = reshaped_input.mean(axis=2)
         return Z
 
     def backward_delta(self, input, delta):
-        '''
-        Gradient of the loss with respect to the input.
-        Distribute the gradient uniformly across all elements in the pooling window.
-        '''
         batch_size, _, chan_in = input.shape
         grad = (delta / self.k_size).reshape(batch_size, self.out_length, 1, chan_in)
         deltax = np.zeros_like(input, dtype=np.float64)
