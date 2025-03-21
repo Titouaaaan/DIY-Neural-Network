@@ -4,8 +4,9 @@
 # ===================================================================
 
 import numpy as np
-from src.convolution import Convolution1D, MaxPool1D, Flatten
 from os.path import join
+from src.convolution import Convolution1D, Flatten
+from src.pooling import MaxPool1D, AveragePool1D
 from src.utils import MnistDataloader, one_hot_encode, plot_loss
 from src.encapsulation import Sequential, Optim
 from src.activation_functions import ReLU, Softmax
