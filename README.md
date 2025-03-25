@@ -65,3 +65,70 @@ The code is structured in a way that progressively builds up from simple compone
 - **Dataset Generation**: Functions to create and visualize synthetic datasets.
 - **MNIST Data Loader**: Utility to load and visualize the MNIST dataset.
 - **Visualization Tools**: Functions to plot data, loss curves, and reconstructed images.
+
+### Progress List
+
+- **Activation Functions**
+  - [x] Tanh
+  - [x] Sigmoid
+  - [x] ReLU
+  - [x] Softmax
+
+- **Layers**
+  - [x] Linear
+  - [x] Convolution1D
+  - [x] MaxPool1D
+  - [x] Convolution2D
+  - [x] MaxPool2D
+  - [ ] AveragePool2D
+  - [x] Flatten
+  - [ ] Batch Normalization
+  - [ ] Dropout
+  - [ ] LSTM
+
+- **Loss Functions**
+  - [x] Mean Squared Error (MSE)
+  - [x] Cross-Entropy
+  - [x] Binary Cross-Entropy
+  - [x] Categorical Cross-Entropy
+  - [ ] Hinge Loss
+
+- **Sequential Network**
+  - [x] Sequential Container
+
+- **Optimizers**
+  - [x] SGD
+  - [ ] Adam
+  - [ ] RMSprop
+
+- **Dimensionality Reduction**
+  - [x] PCA
+  - [x] t-SNE
+
+- **Autoencoder**
+  - [x] Encoder-Decoder Architecture
+
+- **Clustering**
+  - [x] K-Means
+
+- **Regularization Techniques**
+  - [ ] L1 Regularization
+  - [ ] L2 Regularization
+
+- **Data Handling and Visualization**
+  - [x] Dataset Generation 
+  - [x] MNIST Data Loader
+  - [x] Visualization Tools 
+  - [ ] Real-time Training Visualization
+
+- **Model Evaluation**
+  - [ ] Confusion Matrix
+  - [ ] Precision, Recall, F1 Score
+
+- **Advanced Architectures**
+  - [ ] Residual Networks (ResNet)
+  - [ ] Generative Adversarial Networks (GANs)
+
+- **Deployment**
+  - [ ] Model Export/Import
+  - [ ] Integration with Web Frameworks
